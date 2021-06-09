@@ -1023,6 +1023,7 @@ dependencies = [
 name = "rocket-app"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "rocket",
 ]
 
