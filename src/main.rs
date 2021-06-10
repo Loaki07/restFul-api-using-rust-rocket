@@ -6,7 +6,10 @@ use auth::BasicAuth;
 use rocket::response::status;
 use rocket::serde::json::json;
 use rocket::serde::json::Value;
+use rocket_sync_db_pools::{database, diesel};
 
+#[database("sqlite_db")]
+struct DbConn(diesel::SqliteConnection);
 
 #[get("/")]
 fn hello() -> Value {
@@ -14,7 +17,7 @@ fn hello() -> Value {
 }
 
 #[get("/rustaceans")]
-fn get_rustacean(auth: BasicAuth) -> Value {
+fn get_rustacean(auth: BasicAuth, _conn: DbConn) -> Value {
     println!("{:#?}", auth);
     json!([
         {
@@ -87,4 +90,5 @@ fn rocket() -> _ {
             ],
         )
         .register("/", catchers![not_found])
+        .attach(DbConn::fairing())
 }

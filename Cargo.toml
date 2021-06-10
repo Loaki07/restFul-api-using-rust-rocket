@@ -7,5 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = { git = "https://github.com/SergioBenitez/Rocket", features = ["secrets", "tls", "json"] }
+rocket = { version = "0.5.0-rc.1", features = ["secrets", "tls", "json"] }
 base64 = "0.13"
+diesel = { version = "1.4", features = ["sqlite", "r2d2"] }
+
+[dependencies.rocket_sync_db_pools]
+version = "0.1.0-rc.1"
+features = ["diesel_sqlite_pool"]
