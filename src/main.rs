@@ -85,9 +85,15 @@ async fn update_rustacean(
     .await
 }
 
-#[delete("/rustaceans/<_id>")]
-fn delete_rustacean(_id: i32, _auth: BasicAuth) -> status::NoContent {
-    status::NoContent
+#[delete("/rustaceans/<id>")]
+async fn delete_rustacean(id: i32, _auth: BasicAuth, conn: DbConn) -> status::NoContent {
+    conn.run(move |c| {
+        diesel::delete(rustaceans::table.find(id))
+            .execute(c)
+            .expect("Error deleting rustacean from DB");
+        status::NoContent
+    })
+    .await
 }
 
 #[catch(404)]
