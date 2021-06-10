@@ -2,6 +2,8 @@
 extern crate rocket;
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 
 mod auth;
 mod models;
@@ -11,12 +13,16 @@ mod schema;
 use auth::BasicAuth;
 use models::*;
 use repositories::*;
+// use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::serde::json::json;
 use rocket::serde::json::Json;
 use rocket::serde::json::Value;
+// use rocket::Phase;
 use rocket_sync_db_pools::database;
+
+embed_migrations!();
 
 #[database("sqlite_db")]
 struct DbConn(diesel::SqliteConnection);
@@ -98,6 +104,25 @@ fn not_found() -> Value {
     json!({ "success": false, "data": "Not found!"})
 }
 
+// async fn run_db_migrations<P>(
+//     rocket: rocket::Rocket<P>,
+// ) -> Result<rocket::Rocket<P>, rocket::Rocket<P>>
+// where
+//     P: Phase,
+// {
+//     DbConn::get_one(&rocket)
+//         .await
+//         .expect("failed to retriever database connection")
+//         .run(|c| match embedded_migrations::run(c) {
+//             Ok(()) => Ok(rocket),
+//             Err(e) => {
+//                 println!("Failed to run database migrations: {:?}", e);
+//                 Err(rocket)
+//             }
+//         })
+//         .await
+// }
+
 /**
  * Authorization Header: Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l
  */
@@ -117,4 +142,5 @@ fn rocket() -> _ {
         )
         .register("/", catchers![not_found])
         .attach(DbConn::fairing())
+        // .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
 }
