@@ -38,12 +38,15 @@ async fn get_rustacean(auth: BasicAuth, conn: DbConn) -> Value {
 }
 
 #[get("/rustaceans/<id>")]
-fn view_rustacean(id: i32, _auth: BasicAuth) -> Value {
-    json!({
-        "id": id,
-        "name": "John Doe",
-        "email": "john@doe.com"
+async fn view_rustacean(id: i32, _auth: BasicAuth, conn: DbConn) -> Value {
+    conn.run(move |c| {
+        let rustacean = rustaceans::table
+            .find(id)
+            .get_result::<Rustacean>(c)
+            .expect("Error loading rustacean from DB");
+        json!(rustacean)
     })
+    .await
 }
 
 #[post("/rustaceans", format = "json", data = "<new_rustacean>")]
@@ -62,13 +65,24 @@ async fn create_rustacean(
     .await
 }
 
-#[put("/rustaceans/<id>", format = "json")]
-fn update_rustacean(id: i32, _auth: BasicAuth) -> Value {
-    json!({
-        "id": id,
-        "name": "John Doe",
-        "email": "john@doe.com"
+#[put("/rustaceans/<id>", format = "json", data = "<rustacean>")]
+async fn update_rustacean(
+    id: i32,
+    _auth: BasicAuth,
+    conn: DbConn,
+    rustacean: Json<Rustacean>,
+) -> Value {
+    conn.run(move |c| {
+        let result = diesel::update(rustaceans::table.find(id))
+            .set((
+                rustaceans::name.eq(rustacean.name.to_owned()),
+                rustaceans::email.eq(rustacean.email.to_owned()),
+            ))
+            .execute(c)
+            .expect("Error updating rustaceans to DB");
+        json!(result)
     })
+    .await
 }
 
 #[delete("/rustaceans/<_id>")]
