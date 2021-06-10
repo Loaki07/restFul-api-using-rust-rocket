@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 rocket = { version = "0.5.0-rc.1", features = ["secrets", "tls", "json"] }
+serde = { version = "1.0", features = ["derive"] }
 base64 = "0.13"
 diesel = { version = "1.4", features = ["sqlite", "r2d2"] }
 
