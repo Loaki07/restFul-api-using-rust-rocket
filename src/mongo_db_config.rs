@@ -10,10 +10,12 @@ pub async fn connect_to_mongodb() -> Result<Client, Error> {
 
     // Get a handle to the deployment.
     let client = Client::with_options(client_options)?;
+    println!("Connected to mongodb");
 
     for db_name in client.list_database_names(None, None).await.unwrap() {
-        println!("{}", db_name);
+        // println!("{}", db_name);
     }
 
     Ok(client)
 }
+

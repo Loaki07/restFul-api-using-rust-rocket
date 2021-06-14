@@ -8,14 +8,16 @@ extern crate diesel_migrations;
 mod auth;
 mod models;
 mod mongo_db_config;
+mod mongo_db_methods;
 mod repositories;
 mod schema;
 
 use auth::BasicAuth;
 use models::*;
-use repositories::*;
 use mongo_db_config::connect_to_mongodb;
-
+use mongo_db_methods::MongoDb;
+use mongodb::bson::{doc, Document};
+use repositories::*;
 // use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::response::status;
@@ -126,6 +128,13 @@ fn not_found() -> Value {
 //         .await
 // }
 
+#[post("/api/create", format = "json", data = "<new_rustacean>")]
+async fn create(new_rustacean: Json<NewRustacean>) -> Value {
+    let collection = MongoDb::get_collection("rocket-app").await.unwrap();
+    MongoDb::create_one(collection, new_rustacean).await;
+    json! ({ "success": true, "data": "Insert_one" })
+}
+
 /**
  * Authorization Header: Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l
  */
@@ -142,6 +151,7 @@ async fn rocket() -> _ {
                 view_rustacean,
                 update_rustacean,
                 delete_rustacean,
+                create,
             ],
         )
         .register("/", catchers![not_found])

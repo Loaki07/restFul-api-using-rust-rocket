@@ -9,7 +9,7 @@ pub struct Rustacean {
     pub created_at: String,
 }
 
-#[derive(Insertable, serde::Deserialize)]
+#[derive(Insertable, serde::Deserialize, Debug, serde::Serialize)]
 #[table_name = "rustaceans"]
 pub struct NewRustacean {
     pub name: String,
