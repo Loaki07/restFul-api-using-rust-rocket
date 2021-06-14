@@ -4,6 +4,8 @@ extern crate rocket;
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
+#[macro_use]
+extern crate json;
 
 mod auth;
 mod models;
@@ -16,7 +18,7 @@ use auth::BasicAuth;
 use models::*;
 use mongo_db_config::connect_to_mongodb;
 use mongo_db_methods::MongoDb;
-use mongodb::bson::{doc, Document};
+use mongodb::bson::{doc, oid::ObjectId, Document};
 use repositories::*;
 // use rocket::fairing::AdHoc;
 use rocket::http::Status;
@@ -128,11 +130,30 @@ fn not_found() -> Value {
 //         .await
 // }
 
-#[post("/api/create", format = "json", data = "<new_rustacean>")]
-async fn create(new_rustacean: Json<NewRustacean>) -> Value {
-    let collection = MongoDb::get_collection("rocket-app").await.unwrap();
-    MongoDb::insert_one(collection, new_rustacean).await;
-    json! ({ "success": true, "data": "Insert_one" })
+/**
+ * Methods for CRUD for MongoDb
+ */
+#[post("/api/create", format = "application/json", data = "<new_rustacean>")]
+async fn create(
+    new_rustacean: Json<InsertableMongoRustacean>,
+) -> Result<Value, status::Custom<Value>> {
+    let collection = MongoDb::get_collection("rustaceans").await.unwrap();
+    let res = MongoDb::insert_one(collection, json!(new_rustacean.into_inner()))
+        .await
+        .unwrap();
+    Ok(json! ({ "success": true, "data": res }))
+}
+
+#[post("/api/get", format = "application/json", data = "<find_by_id>")]
+async fn get(find_by_id: Json<FindById>) -> Result<Value, status::Custom<Value>> {
+    let collection = MongoDb::get_collection("rustaceans").await.unwrap();
+    match MongoDb::find_one(collection, json!(find_by_id.into_inner())).await {
+        Ok(data) => Ok(json! ({ "success": true, "data": data })),
+        Err(e) => Err(status::Custom(
+            Status::InternalServerError,
+            json!(e.to_string()),
+        )),
+    }
 }
 
 /**
@@ -152,6 +173,7 @@ async fn rocket() -> _ {
                 update_rustacean,
                 delete_rustacean,
                 create,
+                get,
             ],
         )
         .register("/", catchers![not_found])
