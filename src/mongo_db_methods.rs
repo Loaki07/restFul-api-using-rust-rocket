@@ -19,7 +19,7 @@ impl MongoDb {
         Ok(collection)
     }
 
-    pub async fn create_one<T>(db: Collection, data: Json<T>)
+    pub async fn insert_one<T>(db: Collection, data: Json<T>)
     where
         T: std::fmt::Debug,
         T: serde::Serialize,

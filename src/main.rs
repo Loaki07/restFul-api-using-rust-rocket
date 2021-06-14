@@ -131,7 +131,7 @@ fn not_found() -> Value {
 #[post("/api/create", format = "json", data = "<new_rustacean>")]
 async fn create(new_rustacean: Json<NewRustacean>) -> Value {
     let collection = MongoDb::get_collection("rocket-app").await.unwrap();
-    MongoDb::create_one(collection, new_rustacean).await;
+    MongoDb::insert_one(collection, new_rustacean).await;
     json! ({ "success": true, "data": "Insert_one" })
 }
 
