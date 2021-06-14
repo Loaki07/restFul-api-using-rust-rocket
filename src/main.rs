@@ -7,12 +7,15 @@ extern crate diesel_migrations;
 
 mod auth;
 mod models;
+mod mongo_db_config;
 mod repositories;
 mod schema;
 
 use auth::BasicAuth;
 use models::*;
 use repositories::*;
+use mongo_db_config::connect_to_mongodb;
+
 // use rocket::fairing::AdHoc;
 use rocket::http::Status;
 use rocket::response::status;
@@ -127,7 +130,8 @@ fn not_found() -> Value {
  * Authorization Header: Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l
  */
 #[launch]
-fn rocket() -> _ {
+async fn rocket() -> _ {
+    let _mongo_client = connect_to_mongodb().await;
     rocket::build()
         .mount(
             "/",
@@ -142,5 +146,5 @@ fn rocket() -> _ {
         )
         .register("/", catchers![not_found])
         .attach(DbConn::fairing())
-        // .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
+    // .attach(AdHoc::on_ignite("Database Migrations", run_db_migrations))
 }
