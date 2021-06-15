@@ -166,7 +166,8 @@ async fn update(
     insertable_new_data: Json<InsertableMongoRustacean>,
 ) -> Result<Value, status::Custom<Value>> {
     let collection = MongoDb::get_collection("rustaceans").await.unwrap();
-    match MongoDb::update_one(collection, id, insertable_new_data.into_inner()).await {
+    let obj_id = ObjectId::with_string(&String::from(&id)).unwrap();
+    match MongoDb::update_one(collection, obj_id, insertable_new_data.into_inner()).await {
         Ok(data) => Ok(json! ({ "success": true, "data": data })),
         Err(e) => Err(status::Custom(
             Status::InternalServerError,
@@ -178,7 +179,8 @@ async fn update(
 #[delete("/api/delete/<id>")]
 async fn delete(id: String) -> Result<Value, status::Custom<Value>> {
     let collection = MongoDb::get_collection("rustaceans").await.unwrap();
-    match MongoDb::delete_one(collection, id).await {
+    let obj_id = ObjectId::with_string(&String::from(&id)).unwrap();
+    match MongoDb::delete_one(collection, obj_id).await {
         Ok(data) => Ok(json! ({ "success": true, "data": data })),
         Err(e) => Err(status::Custom(
             Status::InternalServerError,

@@ -46,23 +46,13 @@ impl MongoDb {
 
     pub async fn update_one(
         db: Collection,
-        id: String,
+        id: ObjectId,
         new_data: InsertableMongoRustacean,
     ) -> Result<Option<MongoRustacean>, Error> {
         println!("new_data: {:#?}", &new_data);
-        let filter_json = json!({ "_id": {
-            "$oid": id
-        } });
+        let filter_json = json!({ "_id": id.clone() });
         let insertable_filter = bson::to_document(&filter_json).unwrap();
         println!("insertable_filter: {:#?}", insertable_filter.clone());
-
-        // let new_data_to_json = json!({ "$set": {
-        //     "name": new_data.name,
-        //     "email": new_data.email
-        // } });
-        // println!("new_data: {:#?}", &new_data_to_json);
-        // let insertable_new_data = bson::to_document(&new_data_to_json).unwrap();
-        // println!("insertable_new_data: {:#?}", insertable_new_data.clone());
 
         let doc_res = db
             .update_one(
@@ -75,6 +65,18 @@ impl MongoDb {
             )
             .await?;
         println!("Updated {} document", doc_res.modified_count);
+
+        let updated_obj = Self::find_one(db.clone(), json!({ "_id": id })).await?;
+        Ok(updated_obj)
+
+        // let new_data_to_json = json!({ "$set": {
+        //     "name": new_data.name,
+        //     "email": new_data.email
+        // } });
+        // println!("new_data: {:#?}", &new_data_to_json);
+        // let insertable_new_data = bson::to_document(&new_data_to_json).unwrap();
+        // println!("insertable_new_data: {:#?}", insertable_new_data.clone());
+
         // match doc_res {
         //     Ok(document) => {
         //         let res = bson::from_bson(bson::Bson::Document(document))?;
@@ -83,13 +85,10 @@ impl MongoDb {
         //     }
         //     Err(_) => Ok(None),
         // }
-        Ok(None)
     }
 
-    pub async fn delete_one(db: Collection, id: String) -> Result<DeleteResult, Error> {
-        let filter_json = json!({ "_id": {
-            "$oid": id
-        } });
+    pub async fn delete_one(db: Collection, id: ObjectId) -> Result<DeleteResult, Error> {
+        let filter_json = json!({ "_id": id });
         let insertable_filter = bson::to_document(&filter_json).unwrap();
         println!("insertable_filter: {:#?}", insertable_filter.clone());
         db.delete_one(insertable_filter, None).await
