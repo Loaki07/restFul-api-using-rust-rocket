@@ -6,6 +6,7 @@ use mongodb::{
     bson::{doc, Document},
     error::Error,
     options::UpdateModifications,
+    results::DeleteResult,
     Collection,
 };
 use rocket::serde::json::json;
@@ -82,7 +83,12 @@ impl MongoDb {
         Ok(None)
     }
 
-    // async fn delete_one<T>(db: Collection, query: Json<T>) {
-    //     db.delete_one(doc! {query}, None).await;
-    // }
+    pub async fn delete_one(db: Collection, id: String) -> Result<DeleteResult, Error> {
+        let filter_json = json!({ "_id": {
+            "$oid": id
+        } });
+        let insertable_filter = bson::to_document(&filter_json).unwrap();
+        println!("insertable_filter: {:#?}", insertable_filter.clone());
+        db.delete_one(insertable_filter, None).await
+    }
 }

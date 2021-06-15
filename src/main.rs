@@ -181,6 +181,17 @@ async fn update(
     }
 }
 
+#[delete("/api/delete/<id>")]
+async fn delete(id: String) -> Result<Value, status::Custom<Value>> {
+    let collection = MongoDb::get_collection("rustaceans").await.unwrap();
+    match MongoDb::delete_one(collection, id).await {
+        Ok(data) => Ok(json! ({ "success": true, "data": data })),
+        Err(e) => Err(status::Custom(
+            Status::InternalServerError,
+            json!(e.to_string()),
+        )),
+    }
+}
 /**
  * Authorization Header: Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l
  */
@@ -200,6 +211,7 @@ async fn rocket() -> _ {
                 create,
                 get,
                 update,
+                delete,
             ],
         )
         .register("/", catchers![not_found])
