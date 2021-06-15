@@ -46,11 +46,14 @@ impl MongoDb {
 
     pub async fn update_one(
         db: Collection,
-        filter: Value,
+        id: String,
         new_data: InsertableMongoRustacean,
     ) -> Result<Option<MongoRustacean>, Error> {
         println!("new_data: {:#?}", &new_data);
-        let insertable_filter = bson::to_document(&filter).unwrap();
+        let filter_json = json!({ "_id": {
+            "$oid": id
+        } });
+        let insertable_filter = bson::to_document(&filter_json).unwrap();
         println!("insertable_filter: {:#?}", insertable_filter.clone());
 
         // let new_data_to_json = json!({ "$set": {
