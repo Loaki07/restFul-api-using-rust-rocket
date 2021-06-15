@@ -156,6 +156,31 @@ async fn get(find_by_id: Json<FindById>) -> Result<Value, status::Custom<Value>>
     }
 }
 
+#[put(
+    "/api/update/<id>",
+    format = "application/json",
+    data = "<insertable_new_data>"
+)]
+async fn update(
+    id: String,
+    insertable_new_data: Json<InsertableMongoRustacean>,
+) -> Result<Value, status::Custom<Value>> {
+    let collection = MongoDb::get_collection("rustaceans").await.unwrap();
+    match MongoDb::update_one(
+        collection,
+        json!({ "_id": id }),
+        insertable_new_data.into_inner(),
+    )
+    .await
+    {
+        Ok(data) => Ok(json! ({ "success": true, "data": data })),
+        Err(e) => Err(status::Custom(
+            Status::InternalServerError,
+            json!(e.to_string()),
+        )),
+    }
+}
+
 /**
  * Authorization Header: Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l
  */
@@ -174,6 +199,7 @@ async fn rocket() -> _ {
                 delete_rustacean,
                 create,
                 get,
+                update,
             ],
         )
         .register("/", catchers![not_found])

@@ -5,6 +5,7 @@ use mongodb::{
     bson::oid::ObjectId,
     bson::{doc, Document},
     error::Error,
+    options::UpdateModifications,
     Collection,
 };
 use rocket::serde::json::json;
@@ -42,14 +43,44 @@ impl MongoDb {
         }
     }
 
-    // async fn update_one<T>(db: Collection, query: Json<T>, new_data: Rustacean) {
-    //     db.update_one(
-    //         doc! {query.into_inner()},
-    //         doc! {new_data.into_inner()},
-    //         None,
-    //     )
-    //     .await;
-    // }
+    pub async fn update_one(
+        db: Collection,
+        filter: Value,
+        new_data: InsertableMongoRustacean,
+    ) -> Result<Option<MongoRustacean>, Error> {
+        println!("new_data: {:#?}", &new_data);
+        let insertable_filter = bson::to_document(&filter).unwrap();
+        println!("insertable_filter: {:#?}", insertable_filter.clone());
+
+        // let new_data_to_json = json!({ "$set": {
+        //     "name": new_data.name,
+        //     "email": new_data.email
+        // } });
+        // println!("new_data: {:#?}", &new_data_to_json);
+        // let insertable_new_data = bson::to_document(&new_data_to_json).unwrap();
+        // println!("insertable_new_data: {:#?}", insertable_new_data.clone());
+
+        let doc_res = db
+            .update_one(
+                insertable_filter,
+                doc! { "$set": {
+                    "name": new_data.name,
+                    "email": new_data.email
+                } },
+                None,
+            )
+            .await?;
+        println!("Updated {} document", doc_res.modified_count);
+        // match doc_res {
+        //     Ok(document) => {
+        //         let res = bson::from_bson(bson::Bson::Document(document))?;
+        //         println!("Update: {:#?}", res);
+        //         Ok(res)
+        //     }
+        //     Err(_) => Ok(None),
+        // }
+        Ok(None)
+    }
 
     // async fn delete_one<T>(db: Collection, query: Json<T>) {
     //     db.delete_one(doc! {query}, None).await;
